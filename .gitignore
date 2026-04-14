@@ -40,6 +40,13 @@ models/
 *.joblib
 *.pkl
 *.h5
+# Frontend / Node
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+.next/
+out/
+coverage/
 
 # Old/Unused directories (cleaned up)
 dashboard/
