@@ -1,0 +1,17 @@
+name: warranty-scoring
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip=23.0
+  - pip:
+    - azure-ai-ml==1.12.0
+    - azure-identity==1.15.0
+    - pandas==2.1.4
+    - numpy==1.26.3
+    - scikit-learn==1.4.0
+    - xgboost==2.0.3
+    - lightgbm==4.2.0
+    - joblib==1.3.2
+    - inference-schema==1.5.1

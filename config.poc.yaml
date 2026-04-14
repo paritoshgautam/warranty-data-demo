@@ -1,0 +1,79 @@
+# POC Configuration - Cost-Optimized
+# Use this configuration for proof-of-concept to minimize costs
+# Expected cost: $5-15/month (vs $25-65 for production)
+
+project: warranty-analytics-poc
+location: eastus
+resource_group: warranty-ml-poc
+workspace: warranty-ml-poc-ws
+
+# POC Mode enabled
+poc_mode: true
+
+compute:
+  name: cpu-cluster-poc
+  size: STANDARD_DS2_V2      # Smaller VM (2 cores, 7GB RAM)
+  min_instances: 0           # Scale to 0 when idle (no cost)
+  max_instances: 1           # Only 1 node for POC
+  low_priority: true         # 50-80% cost reduction
+  idle_seconds: 60           # Scale down faster
+
+endpoints:
+  closure:
+    name: ep-warranty-close-poc
+    auth_mode: key
+    sku: standard
+    instance_type: Standard_DS2_v2  # Match compute
+    instance_count: 1               # Single instance for POC
+
+powerbi:
+  refresh_cron: "0 6 * * 1"   # Weekly on Monday (not daily)
+  parameters:
+    aml_endpoint_url: https://<region>.inference.ml.azure.com/ep-warranty-close-poc/score
+    aml_api_key_secret_name: aml-ep-key
+
+security:
+  rls:
+    - role: TeamViewer
+      filter: "[RCA: Solving Team] = USERPRINCIPALNAME()"
+
+ml:
+  # POC-optimized ML settings
+  target_horizon_days: 60
+  min_auc: 0.70                    # Acceptable for POC
+  retrain_frequency_days: 90       # Quarterly instead of monthly
+  embedding_model: sentence-transformers/all-MiniLM-L6-v2
+  num_clusters: 10                 # Fewer clusters
+  batch_size: 250                  # Smaller batches
+  sample_size: 5000                # Use 5k records for training
+  max_training_time_minutes: 30    # Limit training time
+  
+  # Model simplification for POC
+  model_params:
+    n_estimators: 50               # Fewer trees (faster training)
+    max_depth: 4                   # Shallower trees
+    learning_rate: 0.1
+
+storage:
+  tier: Standard                   # Not Premium
+  replication: LRS                 # Locally redundant (cheapest)
+  lifecycle_days: 90               # Delete data older than 90 days
+
+monitoring:
+  application_insights:
+    daily_cap_gb: 0.1              # 100MB/day (stay in free tier)
+    sampling_percentage: 50        # Sample 50% of telemetry
+  
+budget:
+  monthly_limit: 20                # Alert if exceeding $20/month
+  alerts:
+    - threshold: 50                # Alert at 50% ($10)
+    - threshold: 80                # Alert at 80% ($16)
+    - threshold: 100               # Alert at 100% ($20)
+
+# Cost optimization flags
+cost_optimization:
+  auto_shutdown_enabled: true      # Auto-shutdown compute
+  delete_old_models: true          # Keep only latest 3 models
+  compress_data: true              # Compress stored data
+  use_spot_instances: true         # Use low-priority VMs
